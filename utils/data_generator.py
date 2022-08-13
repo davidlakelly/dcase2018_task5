@@ -1,3 +1,4 @@
+from email.mime import audio
 import numpy as np
 import h5py
 import time
@@ -23,7 +24,12 @@ class DataGenerator(object):
             training
           seed: int, random seed
         """
-        
+        # print(train_txt)
+        # if(validate_txt==None):
+        #     print("No text found")
+        # else:
+        #     print("found text")
+        #     print(validate_txt)
         self.random_state = np.random.RandomState(seed)
         self.validate_random_state = np.random.RandomState(0)
         lb_to_ix = config.lb_to_ix
@@ -33,12 +39,29 @@ class DataGenerator(object):
         # Load data
         load_time = time.time()
         hf = h5py.File(hdf5_path, 'r')
+        #hf_a = h5py.File("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\aug_shuffle_ten_per\\features\\logmel\\development.h5", 'r')
+        
         
         self.audio_names = np.array([
             name.decode() for name in hf['audio_name']])
-            
+        
+        # self.audio_names2 = np.array([
+        #     name.decode() for name in hf_a['audio_name']])
+        
+        # self.audio_names = np.concatenate((self.audio_names,self.audio_names2),axis=0) 
+        
+       
         self.x = hf['feature'][:]
+        # self.x_a = hf_a['feature'][:]
+        # self.x = np.concatenate((self.x, self.x_a), axis=0)
+        
+        
+        print(type(hf))
         target_labels = [label.decode() for label in hf['label']]
+        # target_labels_a = [label.decode() for label in hf_a['label']]
+        # target_labels = np.concatenate((target_labels,target_labels_a), axis=0)
+
+        
         self.y = np.array([lb_to_ix[label] for label in target_labels])
         
         logging.info("Load data time: {}".format(time.time() - load_time))
@@ -47,14 +70,16 @@ class DataGenerator(object):
         if train_txt is None or validate_txt is None:
             self.train_audio_indexes = np.arange(len(self.audio_names))
             self.validate_audio_indexes = np.array([])
+            print("This should not run")
             
         else:
             get_index_time = time.time()
             self.train_audio_indexes = self.get_audio_indexes(train_txt)
             self.validate_audio_indexes = self.get_audio_indexes(validate_txt)
+            # print(self.train_audio_indexes.size)
+            # print(self.validate_audio_indexes.size)
             logging.info('Get indexes time: {:.3f} s'.format(
                 time.time() - get_index_time))
-        
         logging.info('Training audios: {}'.format(
             len(self.train_audio_indexes)))
             
@@ -67,7 +92,7 @@ class DataGenerator(object):
         
         hf.close()
         
-    def get_audio_indexes(self, txt_file):
+    def get_audio_indexes(self, txt_file, train=False):
         
         audio_names = self.audio_names
         audio_names_in_txt = []
@@ -76,15 +101,26 @@ class DataGenerator(object):
         with open(txt_file, 'r') as f:
             reader = csv.reader(f, delimiter='\t')
             lis = list(reader)
+            if train:
+                path = "C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\aug_shuffle_ten_per\\aug_shuffle_ten_per_meta.txt"
+                with open(path,"r") as aug:
+                    t_read = csv.reader(aug, delimiter='\t')
+                    lis.extend(list(t_read))
             
             audio_names_in_txt = [li[0].split('/')[1] for li in lis]
+        # print(audio_names_in_txt)
                 
         # Get audio ids correspondent with the txt file
         ids = []
                 
         for (i1, audio_name) in enumerate(audio_names):
             if audio_name in audio_names_in_txt:
+                # print("found match")
                 ids.append(i1)
+            else:
+                pass
+                # print("no match")
+                # print(audio_name)
         
         ids = np.array(ids)
         

@@ -1,0 +1,14 @@
+DCASE2018-task5-dev/audio
+DCASE2018-task5-eval/audio
+DCASE2018-task5-dev/aug
+DCASE2018-task5-dev/aug_audio
+DCASE2018-task5-dev/aug_old
+DCASE2018-task5-dev/evaluation_setup
+DCASE2018-task5-eval/audio
+DCASE2018-task5-eval/evaluation_setup
+pytorch/main_pytorch/*.log
+DCASE2018-task5-dev - Copy
+.vscode/launch.json
+
+*.tar
+*.h5

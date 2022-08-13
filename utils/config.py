@@ -1,9 +1,17 @@
+# sample_rate = 16000
+# clip_duration = 10
+# window_size = 1024
+# overlap = 360   # So that there are 240 frames in an audio clip
+# seq_len = 240
+# mel_bins = 64
+# stereo_channels = 4
+
 sample_rate = 16000
 clip_duration = 10
 window_size = 1024
-overlap = 360   # So that there are 240 frames in an audio clip
-seq_len = 240
-mel_bins = 64
+overlap = 706   # So that there are 240 frames in an audio clip
+seq_len = 500
+mel_bins = 40
 stereo_channels = 4
 
 # fold_for_validation = 0     # Use the 0-th fold for validation

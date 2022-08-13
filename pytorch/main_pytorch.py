@@ -13,17 +13,17 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
-
+import csv
 from data_generator import DataGenerator, TestDataGenerator
 from utilities import (create_folder, get_filename, create_logging,
                        calculate_accuracy, calculate_f1_score, 
                        write_testing_data_submission_csv)
-from models_pytorch import move_data_to_gpu, BaselineCnn, Vggish
+from models_pytorch import move_data_to_gpu, BaselineCnn, Vggish, DCASEBaselineCnn
 import config
 
 
 batch_size = 64
-Model = Vggish
+Model = DCASEBaselineCnn
 
 
 def evaluate(model, generator, data_type, max_iteration, cuda):
@@ -256,7 +256,7 @@ def train(args):
         optimizer.step()
           
         # Stop learning
-        if iteration == 10000:
+        if iteration == 1000:
             break
             
             
@@ -315,6 +315,7 @@ def inference_validation_data(args):
         
     outputs = dict['output']
     targets = dict['target']
+    print("length of targets" + str(len(targets)))
     audio_names = dict['audio_name']
                                               
     logging.info('Inference time: {:.4f} s'.format(
@@ -338,7 +339,8 @@ def inference_validation_data(args):
     
     logging.info('---------------------------------------')
     logging.info('{:<30}{:.4f}'.format('Average', np.mean(class_wise_f1_score)))
-    
+
+
     
 def inference_testing_data(args):
 
@@ -352,7 +354,7 @@ def inference_testing_data(args):
     labels = config.labels
     classes_num = len(config.labels)
     ix_to_lb = config.ix_to_lb
-    
+    lb_to_ix = config.lb_to_ix
     # Paths
     dev_hdf5_path = os.path.join(workspace, 'features', 'logmel', 
                                  'development.h5')
@@ -398,11 +400,37 @@ def inference_testing_data(args):
     logging.info('Inference time: {:.4f} s'.format(
         time.time() - inference_time))
 
+    
+    targets = []
+    with open("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-eval\\meta.txt", 'r') as f:
+        
+        reader = csv.reader(f, delimiter='\t')
+        lis = list(reader)
+        for row in lis:
+            targets.append(lb_to_ix[row[1]])
+    #targets.append(1)
     predictions = np.argmax(outputs, axis=-1)
+    accuracy = calculate_accuracy(targets, predictions)
+
+    class_wise_f1_score = calculate_f1_score(targets, predictions, average=None)
+    
+    # Print statistics
+    logging.info('Averaged accuracy: {:.4f}'.format(accuracy))
+    
+    logging.info('{:<30}{}'.format('class_name', 'f1_score'))
+    logging.info('---------------------------------------')
+    
+    for (n, lb) in enumerate(labels):
+        logging.info('{:<30}{:.4f}'.format(lb, class_wise_f1_score[n]))
+    
+    logging.info('---------------------------------------')
+    logging.info('{:<30}{:.4f}'.format('Average', np.mean(class_wise_f1_score)))
+
+
 
     # Write out submission file
-    write_testing_data_submission_csv(submission_path, audio_names, predictions)
-    
+    write_testing_data_submission_csv(submission_path, audio_names, predictions,targets)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Example of parser. ')
@@ -423,7 +451,19 @@ if __name__ == '__main__':
     parser_inference_validation_data.add_argument('--iteration', type=int)
     parser_inference_validation_data.add_argument('--cuda', action='store_true', default=False)
     
+    parser_inference_validation_data = subparsers.add_parser('inference_validation_data_test')
+    parser_inference_validation_data.add_argument('--dataset_dir', type=str, required=True)
+    parser_inference_validation_data.add_argument('--workspace', type=str, required=True)
+    parser_inference_validation_data.add_argument('--holdout_fold', type=int, choices=[1, 2, 3, 4])
+    parser_inference_validation_data.add_argument('--iteration', type=int)
+    parser_inference_validation_data.add_argument('--cuda', action='store_true', default=False)
+    
     parser_inference_testing_data = subparsers.add_parser('inference_testing_data')
+    parser_inference_testing_data.add_argument('--workspace', type=str, required=True)
+    parser_inference_testing_data.add_argument('--iteration', type=int)
+    parser_inference_testing_data.add_argument('--cuda', action='store_true', default=False)
+    
+    parser_inference_testing_data = subparsers.add_parser('inference_testing_data_labelled')
     parser_inference_testing_data.add_argument('--workspace', type=str, required=True)
     parser_inference_testing_data.add_argument('--iteration', type=int)
     parser_inference_testing_data.add_argument('--cuda', action='store_true', default=False)
@@ -442,9 +482,13 @@ if __name__ == '__main__':
 
     elif args.mode == 'inference_validation_data':
         inference_validation_data(args)
+    elif args.mode == 'inference_validation_data_test':
+        inference_validation_data_test(args)
         
     elif args.mode == 'inference_testing_data':
         inference_testing_data(args)
+    
+  
         
     else:
         raise Exception('Incorrect argument!')

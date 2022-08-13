@@ -112,7 +112,70 @@ class BaselineCnn(nn.Module):
         x = F.log_softmax(self.fc1(x), dim=-1)
 
         return x
+
+class DCASEBaselineCnn(nn.Module):
+    def __init__(self, classes_num):
         
+        super(DCASEBaselineCnn, self).__init__()
+
+        self.conv1 = nn.Conv2d(in_channels=1, out_channels=32,
+                               kernel_size=(5), stride=(1),
+                                bias=False)
+
+        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64,
+                               kernel_size=(3), stride=(1),
+                                bias=False)
+
+        self.conv3 = nn.Conv2d(in_channels=128, out_channels=128,
+                               kernel_size=(5, 5), stride=(2, 2),
+                               padding=(2, 2), bias=False)
+
+        self.conv4 = nn.Conv2d(in_channels=128, out_channels=128,
+                               kernel_size=(5, 5), stride=(2, 2),
+                               padding=(2, 2), bias=False)
+
+        self.fc1 = nn.Linear(128, classes_num, bias=True)
+
+        self.bn1 = nn.BatchNorm2d(32)
+        self.bn2 = nn.BatchNorm2d(64)
+        self.bn3 = nn.BatchNorm2d(128)
+        self.bn4 = nn.BatchNorm2d(128)
+
+        self.init_weights()
+
+    def init_weights(self):
+
+        init_layer(self.conv1)
+        init_layer(self.conv2)
+        init_layer(self.conv3)
+        init_layer(self.conv4)
+        init_layer(self.fc1)
+
+        init_bn(self.bn1)
+        init_bn(self.bn2)
+        init_bn(self.bn3)
+        init_bn(self.bn4)
+
+    def forward(self, input, return_bottleneck=False):
+        
+        (_, seq_len, mel_bins) = input.shape
+
+        x = input.view(-1, 1, seq_len, mel_bins)
+        """(samples_num, feature_maps, time_steps, freq_num)"""
+        
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        #x = F.relu(self.bn3(self.conv3(x)))
+        #x = F.relu(self.bn4(self.conv4(x)))
+        
+        x = F.max_pool2d(x, kernel_size=x.shape[2:])
+        x = x.view(x.shape[0:2])
+
+        x = F.log_softmax(self.fc1(x), dim=-1)
+
+        return x
+
+
         
 class VggishConvBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
