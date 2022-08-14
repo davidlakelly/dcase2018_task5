@@ -12,7 +12,7 @@ import config
 class DataGenerator(object):
     
     def __init__(self, hdf5_path, batch_size, train_txt=None, 
-                 validate_txt=None, seed=1234):
+                 validate_txt=None, seed=1234, augmentation_1=None, augmentation_2=None):
         """Data generator. 
         
         Args:
@@ -39,28 +39,44 @@ class DataGenerator(object):
         # Load data
         load_time = time.time()
         hf = h5py.File(hdf5_path, 'r')
-        #hf_a = h5py.File("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\aug_shuffle_ten_per\\features\\logmel\\development.h5", 'r')
+        
         
         
         self.audio_names = np.array([
             name.decode() for name in hf['audio_name']])
         
-        # self.audio_names2 = np.array([
-        #     name.decode() for name in hf_a['audio_name']])
+       
         
-        # self.audio_names = np.concatenate((self.audio_names,self.audio_names2),axis=0) 
         
        
         self.x = hf['feature'][:]
-        # self.x_a = hf_a['feature'][:]
-        # self.x = np.concatenate((self.x, self.x_a), axis=0)
+        
+        
         
         
         print(type(hf))
         target_labels = [label.decode() for label in hf['label']]
-        # target_labels_a = [label.decode() for label in hf_a['label']]
-        # target_labels = np.concatenate((target_labels,target_labels_a), axis=0)
+        
 
+        if augmentation_1 != None:
+            aug = augmentation_1
+            hf_a = h5py.File("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\"+ aug +"\\features\\logmel\\development.h5", 'r')
+            self.audio_names_a = np.array([name.decode() for name in hf_a['audio_name']])
+            self.x_a = hf_a['feature'][:]
+            target_labels_a = [label.decode() for label in hf_a['label']]
+            target_labels = np.concatenate((target_labels,target_labels_a), axis=0)
+            self.x = np.concatenate((self.x, self.x_a), axis=0)
+            self.audio_names = np.concatenate((self.audio_names,self.audio_names_a),axis=0) 
+        
+        if augmentation_2 != None:
+            aug = augmentation_2
+            hf_b = h5py.File("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\"+ aug +"\\features\\logmel\\development.h5", 'r')
+            self.audio_names_b = np.array([name.decode() for name in hf_b['audio_name']])
+            self.x_b = hf_b['feature'][:]
+            target_labels_b = [label.decode() for label in hf_b['label']]
+            target_labels = np.concatenate((target_labels,target_labels_b), axis=0)
+            self.x = np.concatenate((self.x, self.x_b), axis=0)
+            self.audio_names = np.concatenate((self.audio_names,self.audio_names_b),axis=0) 
         
         self.y = np.array([lb_to_ix[label] for label in target_labels])
         
@@ -68,7 +84,19 @@ class DataGenerator(object):
         
         # Get audio ids for training and validation
         if train_txt is None or validate_txt is None:
-            self.train_audio_indexes = np.arange(len(self.audio_names))
+            #self.train_audio_indexes = np.arange(len(self.audio_names))
+            self.train_audio_indexes = self.get_audio_indexes("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\meta.txt")
+            if augmentation_1 != None:
+                aug = augmentation_1
+                aug_index_1 = self.get_audio_indexes("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\"+ aug +"\\"+ aug+"_meta.txt")
+                self.train_audio_indexes = np.concatenate((self.train_audio_indexes,aug_index_1))
+            
+            if augmentation_2 != None:
+                aug = augmentation_2
+                aug_index_2 = self.get_audio_indexes("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\"+ aug +"\\"+ aug+"_meta.txt")
+                self.train_audio_indexes = np.concatenate((self.train_audio_indexes,aug_index_2))
+                
+                
             self.validate_audio_indexes = np.array([])
             print("This should not run")
             
@@ -76,6 +104,18 @@ class DataGenerator(object):
             get_index_time = time.time()
             self.train_audio_indexes = self.get_audio_indexes(train_txt)
             self.validate_audio_indexes = self.get_audio_indexes(validate_txt)
+            
+            if augmentation_1 != None:
+                aug = augmentation_1
+                aug_index_1 = self.get_audio_indexes("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\"+ aug +"\\"+ aug+"_meta.txt")
+                self.train_audio_indexes = np.concatenate((self.train_audio_indexes,aug_index_1))
+            
+            if augmentation_2 != None:
+                aug = augmentation_2
+                aug_index_2 = self.get_audio_indexes("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\"+ aug +"\\"+ aug+"_meta.txt")
+                self.train_audio_indexes = np.concatenate((self.train_audio_indexes,aug_index_2))
+                    
+                
             # print(self.train_audio_indexes.size)
             # print(self.validate_audio_indexes.size)
             logging.info('Get indexes time: {:.3f} s'.format(

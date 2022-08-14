@@ -23,7 +23,7 @@ $CUDA_VISIBLE_DEVICES=$GPU_ID
 python $BACKEND/main_pytorch.py train --dataset_dir=$DEV_DATASET_DIR --workspace=$WORKSPACE --validate --holdout_fold=$HOLDOUT_FOLD --cuda
 
 
-python $BACKEND/main_pytorch.py inference_validation_data --dataset_dir=$DEV_DATASET_DIR --workspace=$WORKSPACE --holdout_fold=$HOLDOUT_FOLD --iteration=5000 --cuda
+python $BACKEND/main_pytorch.py inference_validation_data --dataset_dir=$DEV_DATASET_DIR --workspace=$WORKSPACE --holdout_fold=$HOLDOUT_FOLD --iteration=1000 --cuda
 
 ######################## Full train ########################
 
@@ -31,4 +31,4 @@ python $BACKEND/main_pytorch.py train --dataset_dir=$DEV_DATASET_DIR --workspace
 
 
 
-python $BACKEND/main_pytorch.py inference_testing_data --workspace=$WORKSPACE --iteration=5000 --cuda
+python $BACKEND/main_pytorch.py inference_testing_data --workspace=$WORKSPACE --iteration=1000 --cuda

@@ -68,18 +68,25 @@ def percent_augment(step, mode, out_name, cuts, mix=2):
 
         
 
-percent_augment(10, "shuffle", "aug_shuffle_10_per_5_cuts", 5)
-percent_augment(10, "mixer", "aug_mixer_10_per_5_cuts_2_mix", 5)
+# percent_augment(10, "shuffle", "aug_shuffle_10_per_3_cuts", 3)
+# percent_augment(10, "shuffle", "aug_shuffle_10_per_5_cuts", 5)
+# percent_augment(10, "shuffle", "aug_shuffle_10_per_7_cuts", 7)
 
+
+# percent_augment(5, "shuffle", "aug_shuffle_20_per_3_cuts", 3)
 percent_augment(5, "shuffle", "aug_shuffle_20_per_5_cuts", 5)
-percent_augment(5, "mixer", "aug_mixer_20_per_5_cuts_2_mix", 5)
-
-percent_augment(10, "shuffle", "aug_shuffle_10_per_3_cuts", 3)
-percent_augment(10, "mixer", "aug_mixer_10_per_3_cuts_2_mix", 3)
-
 percent_augment(5, "shuffle", "aug_shuffle_20_per_7_cuts", 7)
-percent_augment(5, "mixer", "aug_mixer_20_per_7_cuts_2_mix", 7)
+
+percent_augment(10, "mixer", "aug_mixer_10_per_3_cuts_2_mix", 3)
+percent_augment(10, "mixer", "aug_mixer_10_per_5_cuts_2_mix", 5)
+percent_augment(10, "mixer", "aug_mixer_10_per_7_cuts_2_mix", 7)
+
+percent_augment(5, "mixer", "aug_mixer_20_per_3_cuts_2_mix", 3)
+percent_augment(5, "mixer", "aug_mixer_20_per_5_cuts_2_mix", 5)
+percent_augment(5, "mixer", "aug_mixer_20_per_3_cuts_2_mix", 7)
+
+percent_augment(10, "mixer", "aug_mixer_10_per_5_cuts_3_mix", 5, 3)
+percent_augment(10, "mixer", "aug_mixer_10_per_7_cuts_3_mix", 7, 3)
 
 
-percent_augment(10, "mixer", "aug_mixer_10_per_3_cuts_3_mix", 7, 3)
-percent_augment(5, "mixer", "aug_mixer_20_per_7_cuts_3_mix", 7, 3)
+

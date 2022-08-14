@@ -1,0 +1,2 @@
+fold,training_accuracy,training_f1,training_loss,validation_accuracy,validation_f1,validation_loss
+2,0.954375,0.9421234906850686,0.13853377103805542,0.905,0.8430500988248956,0.30060166120529175

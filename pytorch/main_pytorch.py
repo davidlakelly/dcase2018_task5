@@ -7,13 +7,14 @@ import h5py
 import math
 import time
 import matplotlib.pyplot as plt
-
+import csv
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.autograd import Variable
 import csv
+from pathlib import Path
 from data_generator import DataGenerator, TestDataGenerator
 from utilities import (create_folder, get_filename, create_logging,
                        calculate_accuracy, calculate_f1_score, 
@@ -23,7 +24,7 @@ import config
 
 
 batch_size = 64
-Model = DCASEBaselineCnn
+Model = BaselineCnn
 
 
 def evaluate(model, generator, data_type, max_iteration, cuda):
@@ -132,7 +133,9 @@ def train(args):
     mini_data = args.mini_data
     cuda = args.cuda
     filename = args.filename
-
+    augmentation_1 = args.augmentation_1
+    augmentation_2 = args.augmentation_2
+    full_train = False
     classes_num = len(config.labels)
     max_validate_iteration = 100
 
@@ -162,6 +165,7 @@ def train(args):
                                 
     else:
         models_dir = os.path.join(workspace, 'models', filename, 'full_train')
+        
                               
     create_folder(models_dir)
     
@@ -174,8 +178,12 @@ def train(args):
     generator = DataGenerator(hdf5_path=hdf5_path,
                         batch_size=batch_size, 
                         train_txt=train_txt, 
-                        validate_txt=validate_txt)
+                        validate_txt=validate_txt,
+                        augmentation_1=augmentation_1,
+                        augmentation_2=augmentation_2
+                        )
 
+    x = generator.train_audio_indexes
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=1e-3, betas=(0.9, 0.999),
                            eps=1e-08, weight_decay=0.)
@@ -224,6 +232,9 @@ def train(args):
 
             train_bgn_time = time.time()
 
+                 
+            
+            
         # Save model
         if iteration % 1000 == 0 and iteration > 0:
 
@@ -235,7 +246,24 @@ def train(args):
                 models_dir, 'md_{}_iters.tar'.format(iteration))
             torch.save(save_out_dict, save_out_path)
             logging.info('Model saved to {}'.format(save_out_path))
-            
+
+            if full_train:
+                if not os.path.exists("experiment_results"):
+                    os.mkdir("experiment_results")
+                
+                file = Path("experiment_results/training_results.csv")
+                if not file:
+                    with open("experiment_results/training_results.csv","w", newline="") as f:
+                        headers = ["title","fold","training_samples", "validation_samples", "training_accuracy", "training_f1","training_loss", "validation_accuracy", "validation_f1", "validation_loss"]
+                        writer = csv.writer(f, delimiter=",", lineterminator='\n')
+                        writer.writerow(headers)
+                
+                with open("experiment_results/training_results.csv","a", newline="") as a:
+                    writer = csv.writer(a, delimiter=",",  lineterminator='\n')
+                    values= [args.title,holdout_fold, len(generator.audio_names), len(generator.validate_audio_indexes), round(tr_acc,4), round(tr_f1_score,4),round(tr_loss,4), round(va_acc,4),round(va_f1_score,5),round(va_loss,5)]
+                    writer.writerow(values)
+
+                
         # Reduce learning rate
         if iteration % 100 == 0 and iteration > 0:
             for param_group in optimizer.param_groups:
@@ -269,6 +297,7 @@ def inference_validation_data(args):
     iteration = args.iteration
     cuda = args.cuda
     filename = args.filename
+    
 
     validation = True
     labels = config.labels
@@ -426,10 +455,38 @@ def inference_testing_data(args):
     logging.info('---------------------------------------')
     logging.info('{:<30}{:.4f}'.format('Average', np.mean(class_wise_f1_score)))
 
-
-
+    labels = ['title','average_accuarcy', 'average_f1_score', 'absence', 'cooking', 'dishwashing', 'eating', 'other', 'social_activity', 'vacuum_cleaner', 'watching_tv', 'working']
+    values = [
+        args.title,
+        accuracy, 
+        np.mean(class_wise_f1_score), 
+        class_wise_f1_score[0],
+        class_wise_f1_score[1],
+        class_wise_f1_score[2],
+        class_wise_f1_score[3],
+        class_wise_f1_score[4],
+        class_wise_f1_score[5],
+        class_wise_f1_score[6],
+        class_wise_f1_score[7],
+        class_wise_f1_score[8],
+        ]
+    
+    file = Path("experiment_results/test_results.csv")
+    
+    if not file:
+        with open("experiment_results/test_results.csv","w", newline="") as f:
+            headers = ["title","fold","training_samples", "validation_samples", "training_accuracy", "training_f1","training_loss", "validation_accuracy", "validation_f1", "validation_loss"]
+            writer = csv.writer(f, delimiter=",", lineterminator='\n')
+            writer.writerow(headers)
+    
+    with open("experiment_results/test_results.csv","a", newline="") as f:
+            headers = ["title","fold","training_samples", "validation_samples", "training_accuracy", "training_f1","training_loss", "validation_accuracy", "validation_f1", "validation_loss"]
+            writer = csv.writer(f, delimiter=",", lineterminator='\n')
+            writer.writerow(values)
+    
+                
     # Write out submission file
-    write_testing_data_submission_csv(submission_path, audio_names, predictions,targets)
+    write_testing_data_submission_csv(submission_path, audio_names, predictions)
 
 
 if __name__ == '__main__':
@@ -443,6 +500,9 @@ if __name__ == '__main__':
     parser_train.add_argument('--holdout_fold', type=int, choices=[1, 2, 3, 4])
     parser_train.add_argument('--mini_data', action='store_true', default=False)
     parser_train.add_argument('--cuda', action='store_true', default=False)
+    parser_train.add_argument('--title', type=str, required=False)
+    parser_train.add_argument('--augmentation_1', type=str, required=False)
+    parser_train.add_argument('--augmentation_2', type=str, required=False)    
 
     parser_inference_validation_data = subparsers.add_parser('inference_validation_data')
     parser_inference_validation_data.add_argument('--dataset_dir', type=str, required=True)
@@ -462,11 +522,16 @@ if __name__ == '__main__':
     parser_inference_testing_data.add_argument('--workspace', type=str, required=True)
     parser_inference_testing_data.add_argument('--iteration', type=int)
     parser_inference_testing_data.add_argument('--cuda', action='store_true', default=False)
+    parser_inference_testing_data.add_argument('--title', type=str, required=False)
+
     
     parser_inference_testing_data = subparsers.add_parser('inference_testing_data_labelled')
     parser_inference_testing_data.add_argument('--workspace', type=str, required=True)
     parser_inference_testing_data.add_argument('--iteration', type=int)
     parser_inference_testing_data.add_argument('--cuda', action='store_true', default=False)
+    
+
+    
 
     args = parser.parse_args()
 
