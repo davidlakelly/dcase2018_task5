@@ -2,9 +2,18 @@ import random
 import pandas as pd
 from pydub import AudioSegment
 import matplotlib as plt
-
+import librosa
+import math
 meta_url = "C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\meta.txt"
 meta_pd = pd.read_csv(meta_url, sep="\t", names=["file_name","class_type","scene"])
+
+def pitch(file_path):
+  original_file_class, original_file_scene = find_attributes_from_path(file_path)
+  original_audio, sr = librosa.load(file_path)
+  semi = int(random.randint(-12,12))
+  pitched = librosa.effects.pitch_shift(original_audio, sr,semi)
+  return pitched, original_file_class, original_file_scene
+
 
 def shuffler(file_path, cuts, waveform=False):
     file_class, file_scene = find_attributes_from_path(file_path)
@@ -88,3 +97,4 @@ def mixer(file_path, cuts, waveform=False, mix=2):
   
   
   
+

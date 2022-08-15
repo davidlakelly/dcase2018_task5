@@ -1,3 +1,4 @@
+from genericpath import exists
 import os
 import sys
 sys.path.insert(1, os.path.join(sys.path[0], '../utils'))
@@ -247,21 +248,21 @@ def train(args):
             torch.save(save_out_dict, save_out_path)
             logging.info('Model saved to {}'.format(save_out_path))
 
-            if full_train:
-                if not os.path.exists("experiment_results"):
-                    os.mkdir("experiment_results")
+            # if full_train:
+            #     if not os.path.exists("experiment_results"):
+            #         os.mkdir("experiment_results")
                 
-                file = Path("experiment_results/training_results.csv")
-                if not file:
-                    with open("experiment_results/training_results.csv","w", newline="") as f:
-                        headers = ["title","fold","training_samples", "validation_samples", "training_accuracy", "training_f1","training_loss", "validation_accuracy", "validation_f1", "validation_loss"]
-                        writer = csv.writer(f, delimiter=",", lineterminator='\n')
-                        writer.writerow(headers)
+            #     file = Path("experiment_results/training_results.csv")
+            #     if not file:
+            #         with open("experiment_results/training_results.csv","w", newline="") as f:
+            #             headers = ["title","fold","training_samples", "validation_samples", "training_accuracy", "training_f1","training_loss", "validation_accuracy", "validation_f1", "validation_loss"]
+            #             writer = csv.writer(f, delimiter=",", lineterminator='\n')
+            #             writer.writerow(headers)
                 
-                with open("experiment_results/training_results.csv","a", newline="") as a:
-                    writer = csv.writer(a, delimiter=",",  lineterminator='\n')
-                    values= [args.title,holdout_fold, len(generator.audio_names), len(generator.validate_audio_indexes), round(tr_acc,4), round(tr_f1_score,4),round(tr_loss,4), round(va_acc,4),round(va_f1_score,5),round(va_loss,5)]
-                    writer.writerow(values)
+            #     with open("experiment_results/training_results.csv","a", newline="") as a:
+            #         writer = csv.writer(a, delimiter=",",  lineterminator='\n')
+            #         values= [args.title,holdout_fold, len(generator.audio_names), len(generator.validate_audio_indexes), round(tr_acc,4), round(tr_f1_score,4),round(tr_loss,4), round(va_acc,4),round(va_f1_score,5),round(va_loss,5)]
+            #         writer.writerow(values)
 
                 
         # Reduce learning rate
@@ -284,7 +285,22 @@ def train(args):
         optimizer.step()
           
         # Stop learning
-        if iteration == 1000:
+        if iteration == 5000:
+            if full_train:
+                if not os.path.exists("experiment_results"):
+                    os.mkdir("experiment_results")
+                
+                file = Path("experiment_results/training_results.csv")
+                if not file:
+                    with open("experiment_results/training_results.csv","w", newline="") as f:
+                        headers = ["title","fold","training_samples", "validation_samples", "training_accuracy", "training_f1","training_loss", "validation_accuracy", "validation_f1", "validation_loss"]
+                        writer = csv.writer(f, delimiter=",", lineterminator='\n')
+                        writer.writerow(headers)
+                
+                with open("experiment_results/training_results.csv","a", newline="") as a:
+                    writer = csv.writer(a, delimiter=",",  lineterminator='\n')
+                    values= [args.title,holdout_fold, len(generator.audio_names), len(generator.validate_audio_indexes), round(tr_acc,4), round(tr_f1_score,4),round(tr_loss,4), round(va_acc,4),round(va_f1_score,5),round(va_loss,5)]
+                    writer.writerow(values)
             break
             
             
@@ -458,31 +474,35 @@ def inference_testing_data(args):
     labels = ['title','average_accuarcy', 'average_f1_score', 'absence', 'cooking', 'dishwashing', 'eating', 'other', 'social_activity', 'vacuum_cleaner', 'watching_tv', 'working']
     values = [
         args.title,
-        accuracy, 
-        np.mean(class_wise_f1_score), 
-        class_wise_f1_score[0],
-        class_wise_f1_score[1],
-        class_wise_f1_score[2],
-        class_wise_f1_score[3],
-        class_wise_f1_score[4],
-        class_wise_f1_score[5],
-        class_wise_f1_score[6],
-        class_wise_f1_score[7],
-        class_wise_f1_score[8],
+        round(accuracy,4), 
+        round(np.mean(class_wise_f1_score),4), 
+        round(class_wise_f1_score[0],4),
+        round(class_wise_f1_score[1],4),
+        round(class_wise_f1_score[2],4),
+        round(class_wise_f1_score[3],4),
+        round(class_wise_f1_score[4],4),
+        round(class_wise_f1_score[5],4),
+        round(class_wise_f1_score[6],4),
+        round(class_wise_f1_score[7],4),
+        round(class_wise_f1_score[8],4)
         ]
     
-    file = Path("experiment_results/test_results.csv")
-    
-    if not file:
-        with open("experiment_results/test_results.csv","w", newline="") as f:
+    if not os.path.exists("experiment_results\\test_results.csv"):
+        with open("experiment_results\\test_results.csv","w", newline="") as f:
             headers = ["title","fold","training_samples", "validation_samples", "training_accuracy", "training_f1","training_loss", "validation_accuracy", "validation_f1", "validation_loss"]
             writer = csv.writer(f, delimiter=",", lineterminator='\n')
-            writer.writerow(headers)
-    
-    with open("experiment_results/test_results.csv","a", newline="") as f:
+            writer.writerow(labels)
+            writer.writerow(values)
+            f.flush()
+    else:
+         with open("experiment_results\\test_results.csv","a", newline="") as f:
             headers = ["title","fold","training_samples", "validation_samples", "training_accuracy", "training_f1","training_loss", "validation_accuracy", "validation_f1", "validation_loss"]
             writer = csv.writer(f, delimiter=",", lineterminator='\n')
             writer.writerow(values)
+            f.flush()
+
+
+    
     
                 
     # Write out submission file
