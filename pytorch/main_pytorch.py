@@ -136,7 +136,7 @@ def train(args):
     filename = args.filename
     augmentation_1 = args.augmentation_1
     augmentation_2 = args.augmentation_2
-    full_train = False
+    full_train = True
     classes_num = len(config.labels)
     max_validate_iteration = 100
 
@@ -285,7 +285,7 @@ def train(args):
         optimizer.step()
           
         # Stop learning
-        if iteration == 5000:
+        if iteration == 1000:
             if full_train:
                 if not os.path.exists("experiment_results"):
                     os.mkdir("experiment_results")

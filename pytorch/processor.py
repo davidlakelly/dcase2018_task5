@@ -60,7 +60,7 @@ def percent_augment(step, mode, out_name, cuts, mix=2):
             f = open("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\" + out_name + "\\" + out_name +"_meta.txt", "a+")
             f.write(str(out_name) + "/" + out_name + "_" + file_name_without_ext +".wav"+ "\t" + str(result_class) + "\t" + str(result_scene) + "\n")
             f.close()
-    elif(mode =="pitch"):
+    elif(mode =="volume"):
     
         if not os.path.exists("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\"):
             os.mkdir("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\")
@@ -80,7 +80,7 @@ def percent_augment(step, mode, out_name, cuts, mix=2):
             base_url = "C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\audio\\"
             full_path = str(base_url) + str(file_name)
             #print(full_path)
-            result_file, result_class, result_scene  = preprocessor.pitch(full_path)
+            result_file, result_class, result_scene  = preprocessor.volume(full_path)
             result_file.export("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\" + out_name + "\\" + out_name + "_" + file_name_without_ext +".wav", format="wav")
             f = open("C:\\Users\\David\\Desktop\\dcase_5\\dcase2018_task5\\DCASE2018-task5-dev\\aug\\" + out_name + "\\" + out_name +"_meta.txt", "a+")
             f.write(str(out_name) + "/" + out_name + "_" + file_name_without_ext +".wav"+ "\t" + str(result_class) + "\t" + str(result_scene) + "\n")
@@ -113,6 +113,6 @@ def percent_augment(step, mode, out_name, cuts, mix=2):
 # percent_augment(10, "mixer", "aug_mixer_10_per_5_cuts_3_mix", 5, 3)
 # percent_augment(10, "mixer", "aug_mixer_10_per_7_cuts_3_mix", 7, 3)
 
-percent_augment(10,"pitch","aug_pitch_10_per_12_semi",5)
+percent_augment(10,"volume","aug_vol_10_per",5)
 
 
